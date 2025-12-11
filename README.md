@@ -1,6 +1,6 @@
 **Picofly initial payload**
 
-** Features: ***
+**Features:**
 - Works even with defective RAM
 - Supports Booting from a FAT32 partition on SD card, EMMC, BOOT1, or BOOT1 at 1MB offset
 - Integrated UMS tool for accessing storage via USB
@@ -8,7 +8,7 @@
 - Integrated toolbox to update modchip firmware, update sdloader, rollback firmware
 - Persistent configuration of the boot action (boot to menu by default, or boot payload by default), the boot storage (SD, EMMC, BOOT1 or automatic), the button combination to boot Stock (enable or disable)
 
-** How to use: **
+**How to use:**
 1) Put sdloader.enc on root of SD card
 2) Boot sdloader.bin (e.g. by loading it via hekate) while holding VOL+ button
 3) Using Vol+/-, In the menu go to More -> Toolbox -> Update IPL, hit POWER to confirm
