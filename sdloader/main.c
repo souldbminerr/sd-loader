@@ -150,33 +150,56 @@ static void handle_file_error(const char *path, u8 drive, FRESULT res){
 }
 
 static SD_LOADER_STATUS load_payload(){
-	FIL f;
-	FRESULT res;
-	u8 drive;
+    FIL f;
+    FRESULT res;
+    u8 drive;
 
-	const char *path = "payload.bin";
+    // Patterns to search for, in priority order
+    const char *hekate_patterns[] = {
+        "hekate_ctcaer_*.*.*.bin",
+        "hekate_ctcaer_*.*.*__ram8GB.bin",
+        NULL
+    };
 
-	if(sdloader_cfg.default_payload_vol == MODCHIP_PAYLOAD_VOL_AUTO){
-		res = open_file_on_any(path, &f, &drive);
-	}else{
-		drive = (u8)sdloader_cfg.default_payload_vol - 1;
-		res = open_file_on(path, &f, drive);
-	}
+    // First, try the default payload.bin
+    const char *path = "payload.bin";
+    if(sdloader_cfg.default_payload_vol == MODCHIP_PAYLOAD_VOL_AUTO){
+        res = open_file_on_any(path, &f, &drive);
+    }else{
+        drive = (u8)sdloader_cfg.default_payload_vol - 1;
+        res = open_file_on(path, &f, drive);
+    }
 
-	if(res != FR_OK){
-		handle_file_error(path, drive, res);
-		return SD_LOADER_ERROR;
-	}
+    // If payload.bin not found, search for hekate patterns
+    if(res != FR_OK){
+        char found_path[256];
+        res = FR_NO_FILE;
 
-	SD_LOADER_STATUS sd_res = read_payload(&f);
+        for(int i = 0; hekate_patterns[i] != NULL && res != FR_OK; i++){
+            if(sdloader_cfg.default_payload_vol == MODCHIP_PAYLOAD_VOL_AUTO){
+                res = find_and_open_file_on_any(hekate_patterns[i], found_path, sizeof(found_path), &f, &drive);
+            }else{
+                drive = (u8)sdloader_cfg.default_payload_vol - 1;
+                res = find_and_open_file_on(hekate_patterns[i], found_path, sizeof(found_path), &f, drive);
+            }
+        }
 
-	if(sd_res != SD_LOADER_OK){
-		handle_sdloader_status(sd_res, drive);
-	}
+        if(res == FR_OK){
+            path = found_path;
+        }
+    }
 
-	f_close(&f);
+    if(res != FR_OK){
+        handle_file_error(path, drive, res);
+        return SD_LOADER_ERROR;
+    }
 
-	return sd_res;
+    SD_LOADER_STATUS sd_res = read_payload(&f);
+    if(sd_res != SD_LOADER_OK){
+        handle_sdloader_status(sd_res, drive);
+    }
+    f_close(&f);
+    return sd_res;
 }
 
 static void clear_screen_except_logo_and_status(){
