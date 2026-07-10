@@ -128,6 +128,9 @@ static void handle_sdloader_status(SD_LOADER_STATUS res, u32 extra_info){
 }
 
 __attribute__((noreturn)) static void launch_payload(){
+	*(u32*)0x7000EF08 = 0x34313254;   // "T214"
+	*(u32*)0x7000EF0C = 0x3043444D;   // "MDC0"
+	*(u32*)0x7000EF10 = 0x00000000;   // "T210MDC0\0"
 	deinit();
 	/* payloads (may) expect to be loaded at 0x40010000, relocate before jumping to payload */
 	reloc_and_start_payload(payload_ctx.addr, payload_ctx.size);
